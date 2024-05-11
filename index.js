@@ -25,9 +25,10 @@ async function run() {
     const database = client.db("studyDB");
     const assignmentCollection = database.collection("assignment")
 
+    //assignment collection request
     app.get('/assignment',async(req,res)=>{
-      const cursor = assignmentCollection.find()
-      const result = await cursor.toArray()
+      
+      const result = await assignmentCollection.find().toArray()
       res.send(result)
     })
 
