@@ -1,5 +1,5 @@
 const express = require("express");
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const cors = require("cors");
 const app = express();
 require("dotenv").config();
@@ -58,6 +58,14 @@ async function run() {
       console.log(filter);
       const count = await assignmentCollection.countDocuments(query)
       res.send({count});
+    })
+
+    //apply delete method 
+    app.delete('/assignment/:id',async(req,res)=>{
+      const id = req.params.id;
+      const query ={_id : new ObjectId(id)}
+      const result = await assignmentCollection.deleteOne(query)
+      res.send(result)
     })
 
     // Send a ping to confirm a successful connection
