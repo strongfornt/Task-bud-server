@@ -90,6 +90,26 @@ app.get('/assignment/:id',async(req,res)=>{
   
 })
 
+//apply put method for update a documents from db
+
+app.put('/assignment/:id',async(req,res)=>{
+  const id = req.params.id;
+  const filter ={_id : new ObjectId(id)};
+  const options ={ upsert:true};
+  const updateAssignment = req.body;
+  const update ={
+    $set:{
+      title:updateAssignment.title,
+      image:updateAssignment.image,
+      difficulty:updateAssignment.difficulty,
+      marks:updateAssignment.marks,
+      description:updateAssignment.description
+    }
+  }
+  const result = await assignmentCollection.updateOne(filter,update,options)
+  res.send(result)
+})
+
     //assignment data post
     app.post('/assignment',async(req,res)=>{
       const assignment = req.body;
