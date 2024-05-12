@@ -1,15 +1,26 @@
 const express = require("express");
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const cors = require("cors");
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser')
 const app = express();
 require("dotenv").config();
 const port = process.env.PORT || 5000;
 
 //Must remove "/" from your production URL
+//Must remove "/" from your production URL
 app.use(
-  cors()
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://onlinestudy-908ec.web.app",
+      "https://onlinestudy-908ec.firebaseapp.com"
+    ],
+    credentials: true,
+  })
 );
 app.use(express.json());
+app.use(cookieParser())
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.v2tnkbl.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -23,13 +34,43 @@ const client = new MongoClient(uri, {
   }
 });
 
+const verifyToken = (req,res,next) =>{
+  const token = req.cookies?.token;
+  // if(!token) res.status()
+    console.log("token in the ",token);
+  next()
+}
+
 async function run() {
   try {
     const database = client.db("studyDB");
     const assignmentCollection = database.collection("assignment")
 
+    //set cookieOption for sign in and log out ===============================
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+    };
+    
+    //jwt token request
+    app.post('/jwt',async(req,res)=>{
+      const user= req.body;
+      const token = jwt.sign(user,process.env.SECRET_KEY,{expiresIn:'1h'})
+      res.cookie("token", token, cookieOptions).send({ success: true });
+    })
+    //clear cookie when user logged out====================
+    app.post('/logout',async(req,res)=>{
+      const user = req.body;
+      console.log("logging out", user);
+      res
+        .clearCookie("token", { ...cookieOptions, maxAge: 0 })
+        .send({ success: true });
+    })
+
     //assignment collection request
     app.get('/assignment',async(req,res)=>{
+      
       const size = parseInt(req.query.size);
       const page = parseInt(req.query.page) -1;
       const filter = req.query.filter;
@@ -44,6 +85,7 @@ async function run() {
     //assignment data post
     app.post('/assignment',async(req,res)=>{
       const assignment = req.body;
+   
       const result = await assignmentCollection.insertOne(assignment);
       res.send(result)
       console.log(assignment);
