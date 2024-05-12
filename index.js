@@ -5,7 +5,10 @@ const app = express();
 require("dotenv").config();
 const port = process.env.PORT || 5000;
 
-app.use(cors());
+//Must remove "/" from your production URL
+app.use(
+  cors()
+);
 app.use(express.json());
 
 
@@ -27,9 +30,34 @@ async function run() {
 
     //assignment collection request
     app.get('/assignment',async(req,res)=>{
-      
-      const result = await assignmentCollection.find().toArray()
+      const size = parseInt(req.query.size);
+      const page = parseInt(req.query.page) -1;
+      const filter = req.query.filter;
+      let query ={}
+      if(filter){
+        query = {difficulty:filter}
+      }
+      const result = await assignmentCollection.find(query).skip(page*size).limit(size).toArray()
       res.send(result)
+    })
+
+    //assignment data post
+    app.post('/assignment',async(req,res)=>{
+      const assignment = req.body;
+      const result = await assignmentCollection.insertOne(assignment);
+      res.send(result)
+      console.log(assignment);
+    })
+   
+    app.get('/assignmentCount',async(req,res)=>{
+      const filter = req.query.filter;
+      let query = {}
+      if(filter) {
+        query = {difficulty:filter}
+      }
+      console.log(filter);
+      const count = await assignmentCollection.countDocuments(query)
+      res.send({count});
     })
 
     // Send a ping to confirm a successful connection
