@@ -81,14 +81,21 @@ async function run() {
       const result = await assignmentCollection.find(query).skip(page*size).limit(size).toArray()
       res.send(result)
     })
+// apply get method for fetch data by id 
+app.get('/assignment/:id',async(req,res)=>{
+  const id = req.params.id;
+  const options = {_id : new ObjectId(id)}
+  const result = await assignmentCollection.findOne(options);
+  res.send(result)
+  
+})
 
     //assignment data post
     app.post('/assignment',async(req,res)=>{
       const assignment = req.body;
-   
       const result = await assignmentCollection.insertOne(assignment);
       res.send(result)
-      console.log(assignment);
+      
     })
    
     app.get('/assignmentCount',async(req,res)=>{
@@ -101,6 +108,7 @@ async function run() {
       const count = await assignmentCollection.countDocuments(query)
       res.send({count});
     })
+
 
     //apply delete method 
     app.delete('/assignment/:id',async(req,res)=>{
