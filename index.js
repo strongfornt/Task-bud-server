@@ -136,6 +136,11 @@ app.put('/assignment/:id',async(req,res)=>{
       const result = await submittedAssignmentCollection.find(options).toArray()
       res.send(result)
     })
+//fetch data for pending page by status pending
+    app.get('/pending',async(req,res)=>{
+      const result = await submittedAssignmentCollection.find({status:"pending"}).toArray()
+      res.send(result)
+    })
 
     //submitted-assignment collection 
     app.post('/submit',async(req,res)=>{
