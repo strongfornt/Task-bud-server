@@ -63,7 +63,7 @@ async function run() {
     //clear cookie when user logged out====================
     app.post('/logout',async(req,res)=>{
       const user = req.body;
-      console.log("logging out", user);
+      
       res
         .clearCookie("token", { ...cookieOptions, maxAge: 0 })
         .send({ success: true });
@@ -127,6 +127,14 @@ app.put('/assignment/:id',async(req,res)=>{
       console.log(filter);
       const count = await assignmentCollection.countDocuments(query)
       res.send({count});
+    })
+
+    //get submitted assignment data by the user from db collection
+    app.get('/submit/:email',async(req,res)=>{
+      const email = req.params.email;
+      const options ={'examinee.email' :email}
+      const result = await submittedAssignmentCollection.find(options).toArray()
+      res.send(result)
     })
 
     //submitted-assignment collection 
