@@ -45,6 +45,7 @@ async function run() {
   try {
     const database = client.db("studyDB");
     const assignmentCollection = database.collection("assignment")
+    const submittedAssignmentCollection = database.collection("submitted")
 
     //set cookieOption for sign in and log out ===============================
     const cookieOptions = {
@@ -70,7 +71,6 @@ async function run() {
 
     //assignment collection request
     app.get('/assignment',async(req,res)=>{
-      
       const size = parseInt(req.query.size);
       const page = parseInt(req.query.page) -1;
       const filter = req.query.filter;
@@ -91,7 +91,6 @@ app.get('/assignment/:id',async(req,res)=>{
 })
 
 //apply put method for update a documents from db
-
 app.put('/assignment/:id',async(req,res)=>{
   const id = req.params.id;
   const filter ={_id : new ObjectId(id)};
@@ -103,7 +102,8 @@ app.put('/assignment/:id',async(req,res)=>{
       image:updateAssignment.image,
       difficulty:updateAssignment.difficulty,
       marks:updateAssignment.marks,
-      description:updateAssignment.description
+      description:updateAssignment.description,
+      date:updateAssignment.date
     }
   }
   const result = await assignmentCollection.updateOne(filter,update,options)
@@ -127,6 +127,13 @@ app.put('/assignment/:id',async(req,res)=>{
       console.log(filter);
       const count = await assignmentCollection.countDocuments(query)
       res.send({count});
+    })
+
+    //submitted-assignment collection 
+    app.post('/submit',async(req,res)=>{
+      const submittedAssignment = req.body;
+      const result = await submittedAssignmentCollection.insertOne(submittedAssignment)
+      res.send(result)
     })
 
 
