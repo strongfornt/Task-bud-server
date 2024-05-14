@@ -78,7 +78,7 @@ async function run() {
       if(filter){
         query = {difficulty:filter}
       }
-      const result = await assignmentCollection.find(query).skip(page*size).limit(size).toArray()
+      const result = await assignmentCollection.find(query).sort({ title: -1 }).skip(page*size).limit(size).toArray()
       res.send(result)
     })
 // apply get method for fetch data by id 
@@ -147,6 +147,24 @@ app.put('/assignment/:id',async(req,res)=>{
       const submittedAssignment = req.body;
       const result = await submittedAssignmentCollection.insertOne(submittedAssignment)
       res.send(result)
+    })
+
+    //update existing submitted assignment data
+    app.put('/pending/:id',async(req,res)=>{
+        const id = req.params.id;
+        const updateData = req.body;
+        const filter ={_id : new ObjectId(id)};
+        const options ={ upsert:true};
+        const update = {
+          $set:{
+            grade:updateData.grade,
+            feedback:updateData.feedback,
+            status:updateData.status
+          }
+        }
+        const result = await submittedAssignmentCollection.updateOne(filter,update,options)
+        res.send(result)
+
     })
 
 
