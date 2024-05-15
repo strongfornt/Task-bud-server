@@ -7,12 +7,11 @@ const app = express();
 require("dotenv").config();
 const port = process.env.PORT || 5000;
 
-//Must remove "/" from your production URL
-//Must remove "/" from your production URL
+
 app.use(
   cors({
     origin: [
-      "http://localhost:5173",
+      // "http://localhost:5173",
       "https://onlinestudy-908ec.web.app",
       "https://onlinestudy-908ec.firebaseapp.com"
     ],
@@ -36,6 +35,7 @@ const client = new MongoClient(uri, {
 
 const verifyToken = (req,res,next) =>{
   const token = req?.cookies?.token;
+ 
   
   if (!token) {
     return res.status(401).send({ message: 'Unauthorized Access.' });
@@ -67,7 +67,7 @@ async function run() {
     //jwt token request
     app.post('/jwt',async(req,res)=>{
       const user= req.body;
-      const token = jwt.sign(user,process.env.SECRET_KEY,{expiresIn:'1h'})
+      const token = jwt.sign(user,process.env.SECRET_KEY,{expiresIn:'1d'})
       res.cookie("token", token, cookieOptions).send({ success: true });
     })
     //clear cookie when user logged out====================
@@ -101,7 +101,10 @@ app.get('/assignment/:id',async(req,res)=>{
 })
 
 //apply put method for update a documents from db
-app.put('/assignment/:id',async(req,res)=>{
+app.put('/assignment/:id',verifyToken,async(req,res)=>{
+  if(req?.user?.email !== req?.query?.email){
+    return res.status(403).send({message:'Forbidden access'})
+  }
   const id = req.params.id;
   const filter ={_id : new ObjectId(id)};
   const options ={ upsert:true};
@@ -121,7 +124,11 @@ app.put('/assignment/:id',async(req,res)=>{
 })
 
     //assignment data post
-    app.post('/assignment',async(req,res)=>{
+    app.post('/assignment',verifyToken,async(req,res)=>{
+      
+      if(req?.user?.email !== req?.query?.email){
+        return res.status(403).send({message:'Forbidden access'})
+      }
       const assignment = req.body;
       const result = await assignmentCollection.insertOne(assignment);
       res.send(result)
@@ -186,7 +193,10 @@ app.put('/assignment/:id',async(req,res)=>{
 
 
     //apply delete method 
-    app.delete('/assignment/:id',async(req,res)=>{
+    app.delete('/assignment/:id',verifyToken,async(req,res)=>{
+      if(req?.user?.email !== req?.query?.email){
+        return res.status(403).send({message:'Forbidden access'})
+      }
       const id = req.params.id;
       const query ={_id : new ObjectId(id)}
       const result = await assignmentCollection.deleteOne(query)
