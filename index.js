@@ -35,10 +35,20 @@ const client = new MongoClient(uri, {
 });
 
 const verifyToken = (req,res,next) =>{
-  const token = req.cookies?.token;
-  // if(!token) res.status()
-    console.log("token in the ",token);
-  next()
+  const token = req?.cookies?.token;
+  
+  if (!token) {
+    return res.status(401).send({ message: 'Unauthorized Access.' });
+  }
+
+  jwt.verify(token,process.env.SECRET_KEY,(err,decoded)=>{
+    if(err){
+      return res.status(401).send({ message: 'Unauthorized Access.' });
+    }
+    req.user = decoded;
+    next()
+  })
+  
 }
 
 async function run() {
@@ -124,20 +134,27 @@ app.put('/assignment/:id',async(req,res)=>{
       if(filter) {
         query = {difficulty:filter}
       }
-      console.log(filter);
+      
       const count = await assignmentCollection.countDocuments(query)
       res.send({count});
     })
 
     //get submitted assignment data by the user from db collection
-    app.get('/submit/:email',async(req,res)=>{
+    app.get('/submit/:email',verifyToken,async(req,res)=>{
+      // console.log('token owner ',req.user?.email);
+      if(req?.user?.email !== req?.params?.email){
+        return res.status(403).send({message:'Forbidden access'})
+      }
       const email = req.params.email;
       const options ={'examinee.email' :email}
       const result = await submittedAssignmentCollection.find(options).toArray()
       res.send(result)
     })
 //fetch data for pending page by status pending
-    app.get('/pending',async(req,res)=>{
+    app.get('/pending',verifyToken,async(req,res)=>{
+      if(req?.user?.email !== req?.query?.email){
+        return res.status(403).send({message:'Forbidden access'})
+      }
       const result = await submittedAssignmentCollection.find({status:"pending"}).toArray()
       res.send(result)
     })
